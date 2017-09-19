@@ -4,6 +4,16 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(morgan('common'));
 
+const {DATABASE_URL} = require('./config');
+mongoose.connect(DATABASE_URL);
+
+mongoose.Promise = global.Promise;
+
+
+
+
+app.get('bl')
+
 app.post('/blogposts'), (req, res) => {
     const requiredFields = ['title', 'content', 'author'];
     for (let i=0; i < requiredFields.length; i++) {
