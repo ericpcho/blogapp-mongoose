@@ -4,17 +4,27 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(morgan('common'));
 
+const bodyParser = require('body-parser');
+const jsonParser = bodyParser.json();
+
 const {DATABASE_URL, PORT} = require('./config');
-// mongoose.connect(DATABASE_URL);
 
 mongoose.Promise = global.Promise;
 
+const {Blog} = require('./models');
 
 
+app.get('/blogposts', (req, res) => {
+    Blog.find()
+    .then(posts => res.json(posts))
+});
 
-app.get('bl')
+app.get('/blogposts/:id', (req, res) => {
+    Blog.findById(req.params.id)
+    .then(posts => res.json(posts))
+})
 
-app.post('/blogposts'), (req, res) => {
+app.post('/blogposts', jsonParser, (req, res) => {
     const requiredFields = ['title', 'content', 'author'];
     for (let i=0; i < requiredFields.length; i++) {
         const field = requiredFields[i];
@@ -29,8 +39,32 @@ Blog.create({
     content: req.body.content,
     author: req.body.author
 })
-.then(Blog => res.status(201)).json()
-}
+.then(posts => res.status(201).json())
+});
+
+app.put('/blogposts/:id', jsonParser, (req, res) => {
+    const requiredFields = ['title', 'content', 'author'];
+    for (let i = 0; i < requiredFields.length; i++) {
+        const field = requiredFields[i];
+        if (!(field in req.body)) {
+            const message = `Missing \`${field}\` in request body`
+            return res.status(400).send(message);
+        }
+    }
+    Blog.findByIdAndUpdate(req.params.id, {
+        title: req.body.title,
+        content: req.body.content,
+        author: req.body.author
+    },
+    {new: true}
+)
+    .then(posts => res.json(posts))
+})
+
+app.delete('/blogposts/:id', (req, res) => {
+    Blog.findByIdAndRemove(req.params.id)
+    .then(posts => res.status(204).end())
+})
 
 
 // closeServer needs access to a server object, but that only
@@ -56,6 +90,7 @@ function runServer(databaseUrl=DATABASE_URL, port=PORT) {
     });
   });
 }
+
 
 // `closeServer` function is here in original code
 
